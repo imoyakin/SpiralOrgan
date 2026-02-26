@@ -1001,15 +1001,25 @@ class _AppShellState extends State<AppShell> {
         String selectedOp = operationController.text;
 
         bool needsPath(String op) {
-          return op != 'command_run';
+          return op == 'file_write' ||
+              op == 'file_delete' ||
+              op == 'directory_create' ||
+              op == 'directory_delete';
         }
 
         bool needsContent(String op) {
-          return op == 'file_write';
+          return op == 'file_write' || op == 'apply_patch';
         }
 
         bool needsCommand(String op) {
           return op == 'command_run';
+        }
+
+        String contentLabel(String op) {
+          if (op == 'apply_patch') {
+            return 'Patch (apply_patch format)';
+          }
+          return 'Content';
         }
 
         return StatefulBuilder(
@@ -1048,6 +1058,10 @@ class _AppShellState extends State<AppShell> {
                             value: 'command_run',
                             child: Text('command_run'),
                           ),
+                          ComboBoxItem(
+                            value: 'apply_patch',
+                            child: Text('apply_patch'),
+                          ),
                         ],
                         onChanged: (value) {
                           if (value == null) {
@@ -1070,7 +1084,7 @@ class _AppShellState extends State<AppShell> {
                     if (needsContent(selectedOp)) ...[
                       const SizedBox(height: 10),
                       InfoLabel(
-                        label: 'Content',
+                        label: contentLabel(selectedOp),
                         child: TextBox(
                           controller: contentController,
                           maxLines: 6,

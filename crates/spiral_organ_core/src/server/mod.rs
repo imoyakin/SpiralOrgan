@@ -31,6 +31,7 @@ use crate::runtime_config::{self, NewProjectDispatcher, NewProvider};
 use crate::runtime_provider::RuntimeProvider;
 use crate::traits::Provider;
 
+mod patch;
 mod provider_agent;
 
 #[derive(Clone)]
@@ -164,6 +165,7 @@ enum SandboxOperationKind {
     FileDelete,
     DirectoryCreate,
     DirectoryDelete,
+    ApplyPatch,
     CommandRun,
     McpCall,
 }
@@ -175,6 +177,7 @@ impl SandboxOperationKind {
             SandboxOperationKind::FileDelete => "file_delete",
             SandboxOperationKind::DirectoryCreate => "directory_create",
             SandboxOperationKind::DirectoryDelete => "directory_delete",
+            SandboxOperationKind::ApplyPatch => "apply_patch",
             SandboxOperationKind::CommandRun => "command_run",
             SandboxOperationKind::McpCall => "mcp_call",
         }
@@ -2362,6 +2365,25 @@ async fn execute_sandbox_action(
             Ok(json!({
                 "path": relative,
                 "deleted": true
+            }))
+        }
+        SandboxOperationKind::ApplyPatch => {
+            let raw_patch = action
+                .content
+                .as_deref()
+                .map(str::trim)
+                .filter(|value| !value.is_empty())
+                .ok_or_else(|| "content is required for apply_patch".to_string())?;
+            let outcome = patch::apply_patch(&workspace_root, raw_patch)?;
+            Ok(json!({
+                "added": outcome.added,
+                "modified": outcome.modified,
+                "deleted": outcome.deleted,
+                "moved": outcome
+                    .moved
+                    .into_iter()
+                    .map(|item| json!({"from": item.from, "to": item.to}))
+                    .collect::<Vec<_>>(),
             }))
         }
         SandboxOperationKind::CommandRun => {

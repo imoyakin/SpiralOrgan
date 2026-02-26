@@ -169,6 +169,7 @@ fn build_system_prompt(
     let mut sections = Vec::new();
     sections.push("You are SpiralOrgan's provider-backed coding agent.".to_string());
     sections.push("Work with the supplied tools to inspect and modify the workspace.".to_string());
+    sections.push("Prefer sandbox_apply_patch for code edits when possible.".to_string());
     sections.push("Be concise; do not fabricate tool outputs.".to_string());
 
     if let Some(ctx) = context {
@@ -307,6 +308,20 @@ fn build_openai_tools() -> Vec<Value> {
         json!({
             "type": "function",
             "function": {
+                "name": "sandbox_apply_patch",
+                "description": "Apply a multi-file patch inside the workspace root using the apply_patch format (*** Begin Patch ... *** End Patch).",
+                "parameters": {
+                    "type": "object",
+                    "properties": {
+                        "patch": {"type": "string"},
+                    },
+                    "required": ["patch"]
+                }
+            }
+        }),
+        json!({
+            "type": "function",
+            "function": {
                 "name": "sandbox_file_write",
                 "description": "Write (create or overwrite) a file at path relative to workspace root.",
                 "parameters": {
@@ -411,6 +426,17 @@ fn build_anthropic_tools() -> Vec<Value> {
                     "timeout_ms": {"type": "integer"},
                 },
                 "required": ["command"]
+            }
+        }),
+        json!({
+            "name": "sandbox_apply_patch",
+            "description": "Apply a multi-file patch inside the workspace root using the apply_patch format (*** Begin Patch ... *** End Patch).",
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "patch": {"type": "string"},
+                },
+                "required": ["patch"]
             }
         }),
         json!({
@@ -620,6 +646,22 @@ async fn execute_tool_call(
                     timeout_ms,
                 },
                 "provider requested sandbox command execution".to_string(),
+                Some(summary),
+            )
+        }
+        "sandbox_apply_patch" => {
+            let patch = required_string(&args, "patch")?;
+            let summary = format!("sandbox_apply_patch: {} bytes", patch.len());
+            (
+                SandboxAction {
+                    operation: SandboxOperationKind::ApplyPatch,
+                    path: None,
+                    content: Some(patch),
+                    command: None,
+                    args: Vec::new(),
+                    timeout_ms: None,
+                },
+                "provider requested sandbox apply_patch".to_string(),
                 Some(summary),
             )
         }
