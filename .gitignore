@@ -1,0 +1,19 @@
+plugins/
+.repo.git/
+.land-worktree/
+.refer
+.tmp
+.lab
+/target
+
+# Gas Town / local runtime state
+.beads/
+.runtime/
+logs/
+crew/
+mayor/
+polecats/
+refinery/
+witness/
+settings/
+.github/work.instructions/

@@ -1,0 +1,169 @@
+api_version = "spiralorgan.pipeline/v0.1"
+pipeline_id = "default-main"
+description = "default orchestrator pipeline"
+
+[defaults]
+max_iterations = 20
+max_parallel_nodes = 4
+cancel_mode = "cooperative"
+
+[[nodes]]
+id = "start_01"
+kind = "start"
+enabled = true
+timeout_ms = 1000
+
+[[nodes]]
+id = "intake_01"
+kind = "intake"
+enabled = true
+role_scope = ["owner"]
+timeout_ms = 60000
+[nodes.execution]
+mode = "sequential"
+allowed_tools = []
+
+[[nodes]]
+id = "recall_01"
+kind = "recall"
+enabled = true
+role_scope = ["designer"]
+timeout_ms = 120000
+[nodes.execution]
+mode = "sequential"
+allowed_tools = ["memory_recall"]
+
+[[nodes]]
+id = "plan_01"
+kind = "plan"
+enabled = true
+role_scope = ["designer"]
+timeout_ms = 180000
+[nodes.execution]
+mode = "sequential"
+allowed_tools = ["kanban_update", "memory_recall"]
+
+[[nodes]]
+id = "dispatch_01"
+kind = "dispatch"
+enabled = true
+role_scope = ["designer"]
+timeout_ms = 60000
+[nodes.execution]
+mode = "sequential"
+allowed_tools = ["delegate"]
+
+[[nodes]]
+id = "execute_01"
+kind = "execute"
+enabled = true
+role_scope = ["worker"]
+timeout_ms = 600000
+[nodes.execution]
+mode = "parallel"
+allowed_tools = ["shell_exec", "file_read", "file_write", "git_status"]
+
+[[nodes]]
+id = "verify_01"
+kind = "verify"
+enabled = true
+role_scope = ["supervisor"]
+timeout_ms = 240000
+[nodes.execution]
+mode = "sequential"
+allowed_tools = ["test_run", "build_run"]
+
+[[nodes]]
+id = "review_01"
+kind = "review"
+enabled = true
+role_scope = ["owner", "supervisor"]
+timeout_ms = 120000
+[nodes.approval]
+required = true
+[nodes.execution]
+mode = "sequential"
+allowed_tools = []
+
+[[nodes]]
+id = "commit_01"
+kind = "commit"
+enabled = true
+role_scope = ["worker"]
+timeout_ms = 120000
+[nodes.execution]
+mode = "sequential"
+allowed_tools = ["memory_store", "audit_append"]
+
+[[nodes]]
+id = "end_01"
+kind = "end"
+enabled = true
+timeout_ms = 1000
+
+[[edges]]
+from = "start_01"
+to = "intake_01"
+priority = 100
+
+[[edges]]
+from = "intake_01"
+to = "recall_01"
+priority = 100
+
+[[edges]]
+from = "recall_01"
+to = "plan_01"
+priority = 100
+
+[[edges]]
+from = "plan_01"
+to = "dispatch_01"
+priority = 100
+
+[[edges]]
+from = "dispatch_01"
+to = "execute_01"
+priority = 100
+
+[[edges]]
+from = "execute_01"
+to = "verify_01"
+priority = 100
+
+[[edges]]
+from = "verify_01"
+to = "review_01"
+priority = 100
+
+[[edges]]
+from = "review_01"
+to = "commit_01"
+priority = 100
+when = "ctx.approval == true"
+
+[[edges]]
+from = "review_01"
+to = "end_01"
+priority = 90
+when = "ctx.approval == false"
+
+[[edges]]
+from = "commit_01"
+to = "end_01"
+priority = 100
+
+[[hooks]]
+id = "sanitize_before_execute"
+phase = "before_node"
+target = "execute_01"
+action = "policy.sanitize_context"
+enabled = true
+
+[[hooks]]
+id = "audit_after_commit"
+phase = "after_node"
+target = "commit_01"
+action = "audit.flush"
+enabled = true
+

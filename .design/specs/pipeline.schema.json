@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "spiralorgan.pipeline.v0.1",
+  "type": "object",
+  "required": ["api_version", "pipeline_id", "nodes", "edges"],
+  "properties": {
+    "api_version": { "const": "spiralorgan.pipeline/v0.1" },
+    "pipeline_id": { "type": "string", "minLength": 1 },
+    "description": { "type": "string" },
+    "defaults": {
+      "type": "object",
+      "properties": {
+        "max_iterations": { "type": "integer", "minimum": 1, "maximum": 1000 },
+        "max_parallel_nodes": { "type": "integer", "minimum": 1, "maximum": 64 },
+        "cancel_mode": { "enum": ["cooperative", "hard"] }
+      },
+      "additionalProperties": false
+    },
+    "nodes": {
+      "type": "array",
+      "minItems": 2,
+      "items": { "$ref": "#/$defs/node" }
+    },
+    "edges": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/edge" }
+    },
+    "hooks": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/hook" }
+    }
+  },
+  "$defs": {
+    "node": {
+      "type": "object",
+      "required": ["id", "kind", "enabled"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^[a-z0-9_\\-]+$" },
+        "kind": {
+          "enum": ["start", "intake", "recall", "plan", "dispatch", "execute", "verify", "review", "commit", "end", "custom"]
+        },
+        "enabled": { "type": "boolean" },
+        "role_scope": { "type": "array", "items": { "type": "string" } },
+        "timeout_ms": { "type": "integer", "minimum": 100, "maximum": 3600000 },
+        "retries": {
+          "type": "object",
+          "properties": {
+            "max_attempts": { "type": "integer", "minimum": 0, "maximum": 10 },
+            "backoff_ms": { "type": "integer", "minimum": 0, "maximum": 60000 }
+          },
+          "additionalProperties": false
+        },
+        "approval": {
+          "type": "object",
+          "properties": {
+            "required": { "type": "boolean" }
+          },
+          "additionalProperties": false
+        },
+        "execution": {
+          "type": "object",
+          "properties": {
+            "mode": { "enum": ["sequential", "parallel"] },
+            "allowed_tools": { "type": "array", "items": { "type": "string" } }
+          },
+          "additionalProperties": false
+        },
+        "inputs": { "type": "object" },
+        "outputs": { "type": "object" },
+        "on_error": {
+          "type": "object",
+          "properties": {
+            "strategy": { "enum": ["goto", "fail", "skip", "retry"] },
+            "next_node": { "type": "string" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "edge": {
+      "type": "object",
+      "required": ["from", "to"],
+      "properties": {
+        "from": { "type": "string" },
+        "to": { "type": "string" },
+        "priority": { "type": "integer", "minimum": 0, "maximum": 1000 },
+        "when": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "hook": {
+      "type": "object",
+      "required": ["id", "phase", "target", "action"],
+      "properties": {
+        "id": { "type": "string" },
+        "phase": { "enum": ["before_node", "after_node", "before_pipeline", "after_pipeline"] },
+        "target": { "type": "string" },
+        "action": { "type": "string" },
+        "enabled": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}
+

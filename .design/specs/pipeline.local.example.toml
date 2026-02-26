@@ -1,0 +1,33 @@
+api_version = "spiralorgan.pipeline/v0.1"
+pipeline_id = "local-override"
+description = "example local override for custom node and safer execution"
+
+[defaults]
+max_iterations = 12
+max_parallel_nodes = 2
+cancel_mode = "cooperative"
+
+[[nodes]]
+id = "quality_gate_01"
+kind = "custom"
+enabled = true
+role_scope = ["supervisor"]
+timeout_ms = 180000
+[nodes.execution]
+mode = "sequential"
+allowed_tools = ["test_run", "lint_run"]
+[nodes.on_error]
+strategy = "goto"
+next_node = "review_01"
+
+[[edges]]
+from = "verify_01"
+to = "quality_gate_01"
+priority = 120
+
+[[edges]]
+from = "quality_gate_01"
+to = "review_01"
+priority = 120
+when = "ctx.tests_passed == true"
+

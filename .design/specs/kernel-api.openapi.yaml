@@ -1,0 +1,80 @@
+openapi: 3.1.0
+info:
+  title: SpiralOrgan Kernel API
+  version: 0.1.0
+servers:
+  - url: https://kernel.example.com
+paths:
+  /kernel/auth/pair/request:
+    post:
+      summary: Request pairing code
+      responses:
+        "200":
+          description: Pairing code issued
+  /kernel/auth/pair/confirm:
+    post:
+      summary: Confirm pairing code on trusted operator side
+      responses:
+        "200":
+          description: Pairing confirmed
+  /kernel/auth/token/exchange:
+    post:
+      summary: Exchange pair code for access token
+      responses:
+        "200":
+          description: Token exchange success
+  /kernel/session/open:
+    post:
+      summary: Open kernel session
+      responses:
+        "200":
+          description: Session opened
+  /kernel/task/submit:
+    post:
+      summary: Submit task
+      responses:
+        "200":
+          description: Task accepted
+  /kernel/task/abort:
+    post:
+      summary: Abort task
+      responses:
+        "200":
+          description: Abort accepted
+  /kernel/task/{task_id}/status:
+    get:
+      summary: Get task status
+      parameters:
+        - in: path
+          name: task_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Task status
+  /kernel/task/{task_id}/events:
+    get:
+      summary: Get task events (polling fallback)
+      parameters:
+        - in: path
+          name: task_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Event list
+  /kernel/deploy:
+    post:
+      summary: Trigger deployment
+      responses:
+        "200":
+          description: Deploy accepted
+  /kernel/ws:
+    get:
+      summary: Websocket endpoint for realtime events
+      responses:
+        "101":
+          description: Switching Protocols
+

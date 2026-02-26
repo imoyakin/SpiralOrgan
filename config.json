@@ -1,0 +1,11 @@
+{
+  "type": "rig",
+  "version": 1,
+  "name": "SpiralOrgan",
+  "git_url": "https://github.com/imoyakin/SpiralOrgan",
+  "default_branch": "main",
+  "created_at": "2026-02-21T16:43:11.157513+08:00",
+  "beads": {
+    "prefix": "sp"
+  }
+}

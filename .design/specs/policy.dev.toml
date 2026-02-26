@@ -1,0 +1,61 @@
+api_version = "spiralorgan.policy/v0.1"
+mode = "supervised"
+
+[features.channels]
+enabled = true
+
+[features.plugins]
+enabled = true
+
+[features.sandbox]
+enabled = false
+backend = "none"
+
+[features.pipeline_edit]
+enabled = true
+
+[features.token_distill]
+enabled = true
+
+[features.vision_snapshot]
+enabled = true
+
+[features.worlddefine_bridge]
+enabled = false
+
+[policy]
+workspace_only = true
+allowed_commands = ["git", "cargo", "npm", "pnpm", "ls", "cat", "rg", "sed", "bash"]
+forbidden_paths = ["/etc", "/root", "/proc", "/sys", "~/.ssh", "~/.gnupg", "~/.aws"]
+
+[policy.risk_matrix]
+shell_exec = "medium"
+file_write_outside_workspace = "critical"
+browser_remote_control = "high"
+channel_bind = "medium"
+plugin_install = "medium"
+
+[policy.enforcement]
+low = "allow"
+medium = "approve"
+high = "approve"
+critical = "deny"
+
+[policy.approval]
+required_for = ["medium", "high"]
+
+[policy.approval.channel_mode]
+cli = "interactive"
+telegram = "operator_only"
+webhook = "token_and_operator"
+
+[policy.rate_limits]
+per_user_per_minute = 60
+per_channel_per_minute = 300
+per_session_parallel_actions = 6
+
+[audit]
+enabled = true
+redact_secrets = true
+export_format = "jsonl"
+

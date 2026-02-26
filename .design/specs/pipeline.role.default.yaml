@@ -1,0 +1,112 @@
+api_version: "spiralorgan.role-pipeline/v0.1"
+pipeline_id: "default-role-loop"
+description: "default scheduler-worker role pipeline for SpiralOrgan"
+defaults:
+  max_iterations: 24
+  max_workers_per_tick: 4
+roles:
+  - id: "scheduler.default"
+    display_name: "Default Scheduler"
+    kind: "scheduler"
+    enabled: true
+    protocol:
+      kind: "google_a2a"
+      agent: "spiral-scheduler"
+      endpoint: "local://scheduler"
+    dispatch_target:
+      kind: "inherit"
+  - id: "worker.default"
+    display_name: "Default Worker"
+    kind: "worker"
+    enabled: true
+    protocol:
+      kind: "google_a2a"
+      agent: "spiral-worker-default"
+      endpoint: "local://worker/default"
+    dispatch_target:
+      kind: "inherit"
+  - id: "worker.codex"
+    display_name: "Codex Worker"
+    kind: "worker"
+    enabled: false
+    protocol:
+      kind: "google_a2a"
+      agent: "spiral-worker-codex"
+      endpoint: "local://worker/codex"
+    dispatch_target:
+      kind: "local_client"
+      reference: "codex"
+  - id: "worker.claude"
+    display_name: "Claude Worker"
+    kind: "worker"
+    enabled: false
+    protocol:
+      kind: "google_a2a"
+      agent: "spiral-worker-claude"
+      endpoint: "local://worker/claude"
+    dispatch_target:
+      kind: "local_client"
+      reference: "claude"
+  - id: "verifier.default"
+    display_name: "Default Verifier"
+    kind: "verifier"
+    enabled: true
+    protocol:
+      kind: "google_a2a"
+      agent: "spiral-verifier"
+      endpoint: "local://verifier"
+    dispatch_target:
+      kind: "inherit"
+stages:
+  - id: "start"
+    kind: "start"
+    role_id: "scheduler.default"
+    enabled: true
+  - id: "intake"
+    kind: "intake"
+    role_id: "scheduler.default"
+    enabled: true
+    prompt_template: |
+      You are {{role.name}}.
+      Intake task:
+      - title: {{task.title}}
+      - prompt: {{task.input}}
+  - id: "schedule_workers"
+    kind: "scheduler_dispatch"
+    role_id: "scheduler.default"
+    enabled: true
+    worker_pool:
+      - "worker.default"
+  - id: "worker_loop"
+    kind: "worker_dispatch"
+    role_id: "$selected_worker"
+    enabled: true
+    prompt_template: |
+      You are worker {{worker.id}} running under scheduler control.
+      Task title: {{task.title}}
+      User prompt:
+      {{task.input}}
+  - id: "verify"
+    kind: "verify"
+    role_id: "verifier.default"
+    enabled: true
+  - id: "end"
+    kind: "end"
+    role_id: "scheduler.default"
+    enabled: true
+edges:
+  - from: "start"
+    to: "intake"
+    priority: 100
+  - from: "intake"
+    to: "schedule_workers"
+    priority: 100
+  - from: "schedule_workers"
+    to: "worker_loop"
+    priority: 100
+  - from: "worker_loop"
+    to: "verify"
+    priority: 100
+  - from: "verify"
+    to: "end"
+    priority: 100

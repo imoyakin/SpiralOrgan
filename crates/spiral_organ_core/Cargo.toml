@@ -1,0 +1,21 @@
+[package]
+name = "spiral_organ_core"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["rlib", "cdylib"]
+
+[dependencies]
+agent_role_pipeline = { path = "../agent_role_pipeline" }
+async-trait = "0.1.89"
+axum = { version = "0.8.4", features = ["json", "ws"] }
+iocraft = "0.7.8"
+reqwest = { version = "0.12.24", default-features = false, features = ["blocking", "json", "rustls-tls"] }
+rusqlite = { version = "0.32.1", features = ["bundled"] }
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"
+smol = "2.0.2"
+tokio = { version = "1.48.0", features = ["macros", "net", "process", "rt-multi-thread", "sync", "time"] }
+toml = "0.8.23"
+tower = { version = "0.5.2", features = ["util"] }

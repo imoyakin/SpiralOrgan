@@ -1,0 +1,87 @@
+openapi: 3.1.0
+info:
+  title: SpiralOrgan Change Visibility API
+  version: 0.1.0
+servers:
+  - url: https://kernel.example.com
+paths:
+  /project/{project_id}/session/{session_id}/file/status:
+    get:
+      summary: List changed file status
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: session_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Changed file list
+  /project/{project_id}/session/{session_id}/file:
+    get:
+      summary: Get file content by view mode
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: session_id
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: path
+          required: true
+          schema:
+            type: string
+        - in: query
+          name: view
+          required: true
+          schema:
+            type: string
+            enum: [raw, patch, diff]
+      responses:
+        "200":
+          description: File content
+  /project/{project_id}/session/{session_id}/changes/summary:
+    get:
+      summary: Get change summary for task/session
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: session_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Summary data
+  /project/{project_id}/session/{session_id}/changes/ack:
+    post:
+      summary: Acknowledge change set
+      parameters:
+        - in: path
+          name: project_id
+          required: true
+          schema:
+            type: string
+        - in: path
+          name: session_id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Acknowledged
+
